@@ -14,6 +14,8 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended:false }))
 app.use(bodyParser.json())
 
+const connection = getConnection()
+
 // Get MySql Connection
 function getConnection() {
     return mysql.createConnection({
@@ -37,7 +39,6 @@ function getDate() {
 
 // New Request Post
 app.post("/newrequest", (req, res) => {
-    const connection = getConnection()
     const insertStatement = "INSERT INTO RequestForm(employee_id, status_id, type_id, submissiondate, deadlinedate, costestimate, description)"
     const post = req.body
     const today = getDate()
@@ -59,7 +60,6 @@ app.post("/newrequest", (req, res) => {
 })
 
 app.post("/updaterequest/:id", (req, res) => {
-    const connection = getConnection()
     const post = req.body
     const id = req.params.id
 
@@ -105,7 +105,6 @@ app.post("/updaterequest/:id", (req, res) => {
 
 // All Requests API Call
 app.get("/requests/:id", (req, res) => {
-    const connection = getConnection()
 
     const id = req.params.id
 
@@ -134,7 +133,6 @@ app.get("/requests/:id", (req, res) => {
 
 // Requests waiting to be Approved query
 app.get("/requeststoapprove", (req, res) => {
-    const connection = getConnection()
 
     connection.query(`SELECT * FROM RequestForm WHERE status_id = ${1}`, (err, rows, fields) => {
         if (err) {
@@ -149,7 +147,6 @@ app.get("/requeststoapprove", (req, res) => {
 
 // Requests Denied
 app.get("/requestsdenied", (req, res) => {
-    const connection = getConnection()
 
     connection.query(`SELECT * FROM RequestForm WHERE status_id = 3`, (err, rows, fields) => {
         if (err) {
