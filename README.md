@@ -1,4 +1,4 @@
 # portlandhr-RESTapi
 ## Node.js restful api
 
-> api posts react app form data to mysql database
+> api handles react app calls and maintains the connection to the mysql database
