@@ -5,7 +5,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3001;
 
 app.use(morgan('short'))
 
@@ -24,6 +24,7 @@ function getConnection() {
     })
 }
 
+// Get Date
 function getDate() {
     let today = new Date();
     const dd = String(today.getDate()).padStart(2, '0');
@@ -34,7 +35,8 @@ function getDate() {
     return today
 }
 
-app.post("/newuser", (req, res) => {
+// New Request Post
+app.post("/newrequest", (req, res) => {
     const connection = getConnection()
     const insertStatement = "INSERT INTO RequestForm(employee_id, status_id, type_id, submissiondate, deadlinedate, costestimate, description)"
     const post = req.body
@@ -56,20 +58,59 @@ app.post("/newuser", (req, res) => {
     res.end()
 })
 
-// Root of API for debugging
-app.get("/", (req, res) => {
-    console.log("Responding to root route");
-    res.send("Hello from Root");
+app.post("/updaterequest/:id", (req, res) => {
+    const connection = getConnection()
+    const post = req.body
+    const id = req.params.id
+
+    if (post.buttonLabel === 'Approve'){
+        const status_id = 2
+        const costestimate = post.reason
+        console.log(post.reason)
+        const updateStatement = `UPDATE RequestForm SET status_id = ${status_id}, costestimate = ${costestimate} WHERE requestform_id = ${id}`;
+        connection.query(updateStatement)
+        // , (err) => {
+        //     if (err) {
+        //         console.log(err)
+        //         res.sendStatus(500)
+        //     }
+        // })
+    }
+
+    else if (post.buttonLabel === 'Deny'){
+        const status_id = 3
+        const description = post.reason
+        const updateStatement = `UPDATE RequestForm SET status_id = ${status_id}, description = '${description}' WHERE requestform_id = ${id}`
+        connection.query(updateStatement)
+        // , (err) => {
+        //     if (err) {
+        //         console.log(err)
+        //         res.sendStatus(500)
+        //     }
+        // })
+    }
+
+    else {
+        res.sendStatus(500)
+    }
+
+    res.end()
 })
 
-// Parse users to JSON and print to DOM
-app.get("/users/:id", (req, res) => {
+// Delete Request
+// app.delete("/removerequest/:id", (req, res) => {
+//     const connection = getConnection()
+//     const id = req.params.id
+// })
+
+// All Requests API Call
+app.get("/requests/:id", (req, res) => {
     const connection = getConnection()
 
     const id = req.params.id
 
     if (id != '*') {
-        connection.query(`SELECT * FROM users WHERE id = ${req.params.id}`, (err, rows, fields) => {
+        connection.query(`SELECT * FROM RequestForm WHERE requestform_id = ${req.params.id}`, (err, rows, fields) => {
             if (err) {
                 console.log(err)
                 res.sendStatus(500)
@@ -79,12 +120,11 @@ app.get("/users/:id", (req, res) => {
         })
     }
     else if (id == '*') {
-        connection.query("SELECT * FROM users", (err, rows, fields) => {
+        connection.query("SELECT * FROM RequestForm", (err, rows, fields) => {
             if (err) {
                 console.log(err)
                 res.sendStatus(500)
             }
-            console.log('no here')
             res.json(rows)
         })
     }
@@ -92,9 +132,43 @@ app.get("/users/:id", (req, res) => {
     return
 })
 
+// Requests waiting to be Approved query
+app.get("/requeststoapprove", (req, res) => {
+    const connection = getConnection()
 
+    connection.query(`SELECT * FROM RequestForm WHERE status_id = ${1}`, (err, rows, fields) => {
+        if (err) {
+            console.log(err)
+            res.sendStatus(500)
+        }
+        res.json(rows)
+    })
 
+    return
+})
 
+// Requests Denied
+app.get("/requestsdenied", (req, res) => {
+    const connection = getConnection()
+
+    connection.query(`SELECT * FROM RequestForm WHERE status_id = 3`, (err, rows, fields) => {
+        if (err) {
+            console.log(err)
+            res.sendStatus(500)
+        }
+        res.json(rows)
+    })
+
+    return
+})
+
+// Root of API for debugging
+app.get("/", (req, res) => {
+    console.log("Responding to root route");
+    res.send("Hello from Root");
+})
+
+// Listening Log
 app.listen(port, () => {
     console.log(`Server is listening on ${port}`)
 });
